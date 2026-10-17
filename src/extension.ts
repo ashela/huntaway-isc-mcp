@@ -38,12 +38,14 @@ export function activate(context: vscode.ExtensionContext): void {
     const clientId = await vscode.window.showInputBox({
       title: `Credentials for ${key}: client id`,
       prompt: "Personal Access Token id (preferred) or API client id. Stored in VS Code's secret storage.",
+      placeHolder: "The 32-character id from Preferences, then Personal Access Tokens",
       ignoreFocusOut: true,
     });
     if (!clientId?.trim()) return false;
     const clientSecret = await vscode.window.showInputBox({
       title: `Credentials for ${key}: client secret`,
       prompt: "Never shown again, never written to settings.",
+      placeHolder: "The secret shown once when the token was created",
       password: true,
       ignoreFocusOut: true,
     });
@@ -55,8 +57,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const editRecord = async (existing?: TenantRecord): Promise<TenantRecord | undefined> => {
     const key = existing?.key ?? (await vscode.window.showInputBox({
       title: "Tenant key",
-      prompt: "Short handle the model will use in tool calls, e.g. dev, prod, sandbox. Lower-case letters, digits and dashes.",
-      value: "",
+      prompt: "Short handle the model will use in tool calls. Lower-case letters, digits and dashes.",
+      placeHolder: "e.g. dev, prod, sandbox",
       validateInput: (v) => (KEY_PATTERN.test(v.trim().toLowerCase()) ? undefined : "Use 1 to 32 lower-case letters, digits or dashes."),
       ignoreFocusOut: true,
     }))?.trim().toLowerCase();
@@ -65,12 +67,13 @@ export function activate(context: vscode.ExtensionContext): void {
       void vscode.window.showErrorMessage(`A tenant with key "${key}" already exists.`);
       return undefined;
     }
-    const label = await vscode.window.showInputBox({ title: "Tenant label", prompt: "Shown in results, e.g. Build tenant.", value: existing?.label ?? key, ignoreFocusOut: true });
+    const label = await vscode.window.showInputBox({ title: "Tenant label", prompt: "Shown in results.", placeHolder: "e.g. Build tenant", value: existing?.label ?? key, ignoreFocusOut: true });
     if (!label?.trim()) return undefined;
     const baseUrl = await vscode.window.showInputBox({
       title: "API base URL",
-      prompt: "The tenant's API host, e.g. https://acme.api.identitynow.com",
-      value: existing?.baseUrl ?? "https://",
+      prompt: "The tenant's API host: https://<tenant>.api.identitynow.com. Find <tenant> in the address bar when signed in to ISC.",
+      placeHolder: "https://acme.api.identitynow.com",
+      value: existing?.baseUrl ?? "",
       validateInput: (v) => {
         try {
           const u = new URL(normaliseBaseUrl(v));
@@ -84,14 +87,16 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!baseUrl?.trim()) return undefined;
     const purpose = await vscode.window.showInputBox({
       title: "Purpose (optional)",
-      prompt: "Echoed on every result, e.g. 'build tenant' or 'demo data: do not cite in deliverables'.",
+      prompt: "Echoed on every result so the assistant knows what the tenant is for.",
+      placeHolder: "e.g. build tenant, or: demo data, do not cite in deliverables",
       value: existing?.purpose ?? "",
       ignoreFocusOut: true,
     });
     if (purpose === undefined) return undefined;
     const tokens = await vscode.window.showInputBox({
       title: "Environment tokens to mask when comparing tenants (optional)",
-      prompt: "Comma-separated, e.g. DEV, dev-tenant. Masked to <ENV> so prefixes do not read as drift.",
+      prompt: "Comma-separated. Masked to <ENV> when comparing tenants so environment prefixes do not read as drift.",
+      placeHolder: "e.g. DEV, dev-tenant",
       value: existing?.maskTokens?.join(", ") ?? "",
       ignoreFocusOut: true,
     });
