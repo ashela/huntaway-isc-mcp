@@ -13,7 +13,11 @@ Nothing to install beside the extension. The server runs on the editor's own Nod
 
 Credentials go to VS Code's secret storage (the operating system keychain) and reach the server only as an environment variable of its own process, at start. They are never written to `settings.json`, so Settings Sync and a committed `.vscode` folder cannot carry them.
 
-**Test Connection** on a tenant proves the credential and tells you whether it has user context.
+**Test Connection** on a tenant proves the credential and tells you whether it has user context; the result stays on the tenant's row.
+
+## Browsing a tenant
+
+Each tenant in the Huntaway view opens into its object types: sources, identity profiles, identity attributes, transforms, workflows, launchers, forms, access profiles, roles, governance groups, non-employee sources, campaign templates and SoD policies, with a count per type. Click an object to open its JSON read-only in an editor. The listing is read once per session; Refresh re-reads it. Nothing here writes to the tenant.
 
 ## Tools
 

@@ -2,7 +2,7 @@
   "name": "sailpoint-isc-mcp",
   "displayName": "Huntaway: SailPoint ISC MCP",
   "description": "An MCP server for SailPoint Identity Security Cloud inside VS Code: search, identities, workflows and their executions, launchers and who can see them, form instances, accounts, hosted access requests, and drift between two tenants. Credentials stay in VS Code secret storage.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "huntaway",
   "license": "MIT",
   "icon": "resources/icon.png",
@@ -77,18 +77,25 @@
       { "command": "huntaway-isc.setCredentials", "title": "Set Credentials", "category": "Huntaway ISC", "icon": "$(key)" },
       { "command": "huntaway-isc.setDefault", "title": "Set as Default Tenant", "category": "Huntaway ISC", "icon": "$(star)" },
       { "command": "huntaway-isc.testTenant", "title": "Test Connection", "category": "Huntaway ISC", "icon": "$(plug)" },
-      { "command": "huntaway-isc.removeTenant", "title": "Remove Tenant", "category": "Huntaway ISC", "icon": "$(trash)" }
+      { "command": "huntaway-isc.removeTenant", "title": "Remove Tenant", "category": "Huntaway ISC", "icon": "$(trash)" },
+      { "command": "huntaway-isc.refresh", "title": "Refresh", "category": "Huntaway ISC", "icon": "$(refresh)" },
+      { "command": "huntaway-isc.openObject", "title": "Open JSON", "category": "Huntaway ISC" }
     ],
     "menus": {
       "view/title": [
-        { "command": "huntaway-isc.addTenant", "when": "view == huntawayIsc.tenants", "group": "navigation" }
+        { "command": "huntaway-isc.addTenant", "when": "view == huntawayIsc.tenants", "group": "navigation@1" },
+        { "command": "huntaway-isc.refresh", "when": "view == huntawayIsc.tenants", "group": "navigation@2" }
       ],
       "view/item/context": [
         { "command": "huntaway-isc.testTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "inline@1" },
         { "command": "huntaway-isc.setCredentials", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "inline@2" },
         { "command": "huntaway-isc.editTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "1_edit@1" },
         { "command": "huntaway-isc.setDefault", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "1_edit@2" },
-        { "command": "huntaway-isc.removeTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "9_danger@1" }
+        { "command": "huntaway-isc.removeTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "9_danger@1" },
+        { "command": "huntaway-isc.refresh", "when": "view == huntawayIsc.tenants && viewItem == category", "group": "inline" }
+      ],
+      "commandPalette": [
+        { "command": "huntaway-isc.openObject", "when": "false" }
       ]
     },
     "configuration": {
