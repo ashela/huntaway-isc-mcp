@@ -40,7 +40,8 @@ export async function main(): Promise<void> {
     { name: "huntaway-isc", version: VERSION },
     { instructions: instructions(tenants.map((t) => t.key), def) },
   );
-  registerTools(server, isc, { stepCap });
+  // The operator's calendar day is this machine's: the server runs where the person sits.
+  registerTools(server, isc, { stepCap, todayOffsetHours: -new Date().getTimezoneOffset() / 60 });
   await server.connect(new StdioServerTransport());
 }
 

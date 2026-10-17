@@ -33,6 +33,8 @@ Each tenant in the Huntaway view opens into its object types: sources, identity 
 | `isc_accounts` | Accounts on a source, with an optional sweep for unresolved templates. | No |
 | `isc_compare_tenants` | Logic drift between two tenants for one object type, with ids, timestamps, owners, email addresses and each tenant's environment tokens masked. | No |
 | `isc_access_requests` | SailPoint's hosted access-request tools, through the tenant's own endpoint. | create and cancel |
+| `isc_dataflow` | The tenant's data-flow diagram and attribute-level source-to-target map, in Huntaway's DFD model: sources, identity profiles with transforms dereferenced, CREATE policies, attribute sync, correlation, and the issues found on the way. | No |
+| `isc_nonemployee_load` | Bulk-create non-employee records from a tab-separated export with the notice workflows held off until every identity has settled. `plan` is a dry run; `apply`, `restore` and `rollback` need confirmation. | apply, restore, rollback |
 | `isc_request` | Any method, any path. The escape hatch. | Any method but GET |
 
 Read tools are marked read-only. The two that can write require `confirm: true`, which the assistant may set only after you have agreed to that specific change, and the editor asks before running them.
@@ -44,6 +46,14 @@ Read tools are marked read-only. The two that can write require `confirm: true`,
 - **Launcher visibility is an entitlement, not an admin level.** The gate entitlement matches on the launcher's id as its value, never its name. `isc_launchers` walks the chain and reports the two usual causes: no gate entitlement, or a gate role matching zero identities.
 - **A 200 on a form submit does not mean it was submitted.** A validation failure leaves the instance `IN_PROGRESS`; `isc_form_instances` shows the `formErrors`.
 - **The search index lags.** When the answer drives a decision, confirm with `isc_identity`.
+
+### Bulk loading non-employee records
+
+`isc_nonemployee_load` is the contractor loader generalised. Nothing about a tenant is in the extension: a **load profile** JSON you keep beside the data names the non-employee source, how a login, uid and address are formed, which file columns feed which record fields, which reference sources hold the codes, the form whose option lists validate values, the notice workflows to hold off, the lifecycle timing and the quiet windows. `resources/examples/nonemployee-profile.example.json` is a complete starting point.
+
+The sequence is `plan` (a dry run: every line comes back LOAD or SKIP with the reason, plus a PLAN DIGEST), then `apply` with `confirm: true` and that digest. The apply runs as a job inside the server: it snapshots the identities it watches, disables the notice workflows (the STATE file on disk names them before the first write), creates one record at a time with a write-ahead entry in the RESULTS file, waits for every created identity to settle, and only then re-enables the workflows. If anything is not right they stay off and the reply names the `restore` to run. `rollback` deletes what a results file created, the same way. Work files live under `~/.huntaway-isc/<tenant>` (override with `HUNTAWAY_ISC_WORK_DIR`).
+
+A POST whose answer was lost is never re-sent: the record is found by login. A record counts as gone only on two 404 reads. A workflow whose definition changed while it was off is never re-enabled by the tool.
 
 ### Comparing tenants
 

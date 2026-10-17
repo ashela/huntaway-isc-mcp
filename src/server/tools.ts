@@ -12,6 +12,7 @@ import {
 } from "./compare.js";
 import { analyseWorkflow, formSteps, stepsOf, httpSteps } from "./diagnostics.js";
 import { buildDataFlow, dataFlowBlock, gather, summarise as summariseDataFlow } from "./dataflow.js";
+import { registerNonEmployeeTool } from "./nonemployee/tool.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve as resolvePath } from "node:path";
 import { MAX_CHARS_DEFAULT, asList, asRecord, clip, isOk, leakedAttributes, lower, matchByName, q, rows, type Json } from "./util.js";
@@ -40,6 +41,8 @@ const maxChars = z.number().int().positive().optional().describe(`Clip the respo
 
 export interface ToolOptions {
   stepCap: number;
+  /** Hours the operator's calendar day runs ahead of UTC (HUNTAWAY_ISC_TODAY_OFFSET_HOURS). */
+  todayOffsetHours?: number;
 }
 
 export function registerTools(server: McpServer, isc: IscClient, options: ToolOptions): void {
@@ -797,6 +800,8 @@ export function registerTools(server: McpServer, isc: IscClient, options: ToolOp
       return isc.envelope(tenant, result);
     }),
   );
+
+  registerNonEmployeeTool(server, isc, { todayOffsetHours: options.todayOffsetHours ?? 0 });
 
   void nameOf;
 }
