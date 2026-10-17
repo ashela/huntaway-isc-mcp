@@ -1,19 +1,25 @@
 name: Release
 
-# A tag v<version> builds, gates and publishes to the Marketplace. The tag
+# A tag v<version> builds and gates the .vsix and attaches it to a GitHub
+# Release for upload by hand at marketplace.visualstudio.com/manage. The tag
 # must equal package.json's version, so the listing and the file never
-# disagree. VSCE_PAT is a Marketplace token with the Manage scope, stored as
-# a repository secret.
+# disagree. A tag with a prerelease suffix (v0.2.0-pre.1) or any 0.x tag
+# packages with --pre-release, which is how the Marketplace marks it.
+#
+# No token publishes from here: global Marketplace PATs retire on
+# 1 Dec 2026. The automated route, when wanted, is Azure Pipelines with a
+# managed identity and `vsce publish --azure-credential`, not a secret in
+# this repository.
 
 on:
   push:
     tags: ["v*"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,16 +42,25 @@ jobs:
         run: |
           if [ -z "$LEAK_GATE_TERMS" ]; then echo "LEAK_GATE_TERMS secret is not set"; exit 1; fi
           printf '%s\n' "$LEAK_GATE_TERMS" > .leak-gate.local
-      - run: npm run package
+      - name: Package (pre-release for 0.x and for a prerelease suffix)
+        run: |
+          case "${GITHUB_REF_NAME#v}" in
+            0.*|*-*) npm run package -- --pre-release ;;
+            *) npm run package ;;
+          esac
       - uses: actions/upload-artifact@v4
         with:
           name: vsix-${{ github.ref_name }}
           path: out/*.vsix
           retention-days: 30
           if-no-files-found: error
-      - name: Publish to the Marketplace
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: |
-          if [ -z "$VSCE_PAT" ]; then echo "VSCE_PAT secret is not set"; exit 1; fi
-          npx vsce publish --packagePath out/*.vsix
+      - name: Attach the .vsix to a GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.vsix
+          prerelease: ${{ startsWith(github.ref_name, 'v0.') || contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          body: |
+            Built and leak-gated by the Release workflow. To publish: download the .vsix,
+            install it locally once (`code --install-extension <file> --force`), then upload
+            it at https://marketplace.visualstudio.com/manage/publishers/huntaway.

@@ -67,6 +67,15 @@ npm run package   # builds, gates, packages, unzips the .vsix and gates its cont
 
 The leak gate (`scripts/leak-gate.mjs`) fails packaging on email addresses, object ids, tenant hosts, credential-looking values and a private term list that is never committed. Put yours in `.leak-gate.local` (gitignored) and in the `LEAK_GATE_TERMS` repository secret.
 
+### Publishing
+
+No token publishes from CI: global Marketplace PATs retire on 1 December 2026. A `v<version>` tag runs the Release workflow, which builds and gates the `.vsix` (as a pre-release for every 0.x version) and attaches it to a GitHub Release. Then:
+
+1. Download the `.vsix` and install it locally once: `code --install-extension <file> --force`.
+2. Upload it at https://marketplace.visualstudio.com/manage/publishers/huntaway.
+
+The same by hand: `npm run package -- --pre-release`. When publishing should be automatic, the route is Azure Pipelines with a managed identity and `vsce publish --azure-credential`.
+
 ## Licence
 
 MIT. SailPoint and Identity Security Cloud are trademarks of SailPoint Technologies. This extension is not affiliated with SailPoint.
