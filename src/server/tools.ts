@@ -11,6 +11,9 @@ import {
   type ReadOnlyView,
 } from "./compare.js";
 import { analyseWorkflow, formSteps, stepsOf, httpSteps } from "./diagnostics.js";
+import { buildDataFlow, dataFlowBlock, gather, summarise as summariseDataFlow } from "./dataflow.js";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve as resolvePath } from "node:path";
 import { MAX_CHARS_DEFAULT, asList, asRecord, clip, isOk, leakedAttributes, lower, matchByName, q, rows, type Json } from "./util.js";
 
 type ToolResult = { content: { type: "text"; text: string }[]; isError?: boolean };
@@ -752,6 +755,46 @@ export function registerTools(server: McpServer, isc: IscClient, options: ToolOp
       }
       if (warnings.length) result.WARNING = warnings.join(" ");
       return isc.envelope(tenant, { ok: true, launcher: result });
+    }),
+  );
+
+  server.registerTool(
+    "isc_dataflow",
+    {
+      title: "Data flow and source-to-target map",
+      description:
+        "Derive the tenant's data-flow diagram and attribute-level source-to-target mapping from what it holds: every " +
+        "source (authoritative or target), each identity profile's attribute mappings with transforms dereferenced to the " +
+        "account attributes they read, each target's CREATE provisioning policy, attribute sync and correlation " +
+        "configuration. Emits the Huntaway 'DFD and Source to Target mapping' model (kind huntaway.dataflow): lanes, " +
+        "systems, numbered flows, lineage rows grouped per profile and per target, and issues such as a mapping that " +
+        "references a missing transform or an undefined identity attribute. With output_path the full model is written " +
+        "to that file for opening in Huntaway; the reply then carries the summary and issues. Reads only.",
+      inputSchema: {
+        title: z.string().optional().describe("Document title (default: the tenant label)."),
+        output_path: z.string().optional().describe("Write the full huntaway.dataflow JSON here (absolute path; parent directories are created)."),
+        include_model: z.boolean().optional().describe("Include the full model in the reply (default: only when no output_path)."),
+        tenant: tenantArg,
+        max_chars: maxChars,
+      },
+      annotations: READ,
+    },
+    async ({ title, output_path, include_model, tenant, max_chars = MAX_CHARS_DEFAULT }) => guarded(async () => {
+      const t = isc.resolve(tenant);
+      const gathered = await gather({ get: (path) => isc.call(tenant, "GET", path) });
+      if (!gathered.sources.length) {
+        return isc.envelope(tenant, { ok: false, error: "no sources could be read", unread: gathered.unread });
+      }
+      const model = buildDataFlow(gathered, title ?? `${t.label}: data flows and source-to-target mapping`);
+      const result: Record<string, Json> = { ok: true, summary: summariseDataFlow(model) };
+      if (output_path) {
+        const file = resolvePath(output_path);
+        mkdirSync(dirname(file), { recursive: true });
+        writeFileSync(file, JSON.stringify(dataFlowBlock(model), null, 2) + "\n", "utf8");
+        result.written = file;
+      }
+      if (include_model ?? !output_path) result.model = clip(model as unknown as Json, max_chars);
+      return isc.envelope(tenant, result);
     }),
   );
 

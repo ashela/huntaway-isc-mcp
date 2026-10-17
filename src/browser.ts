@@ -30,7 +30,7 @@ export const CATEGORIES: Category[] = [
   { id: "form-definitions", label: "Forms", path: "/v2025/form-definitions", paged: true, detail: byId("/v2025/form-definitions"), icon: "checklist" },
   { id: "access-profiles", label: "Access profiles", path: "/v2025/access-profiles", paged: true, detail: byId("/v2025/access-profiles"), icon: "key" },
   { id: "roles", label: "Roles", path: "/v2025/roles", paged: true, detail: byId("/v2025/roles"), icon: "organization" },
-  { id: "governance-groups", label: "Governance groups", path: "/v2025/workgroups", paged: true, detail: byId("/v2025/workgroups"), icon: "people" },
+  { id: "governance-groups", label: "Governance groups", path: "/v2025/workgroups", paged: true, detail: byId("/v2025/workgroups"), icon: "organization" },
   { id: "non-employee-sources", label: "Non-employee sources", path: "/v2025/non-employee-sources", paged: true, detail: byId("/v2025/non-employee-sources"), icon: "briefcase" },
   { id: "campaign-templates", label: "Campaign templates", path: "/v2025/campaign-templates", paged: true, detail: byId("/v2025/campaign-templates"), icon: "calendar" },
   { id: "sod-policies", label: "SoD policies", path: "/v2025/sod-policies", paged: true, detail: byId("/v2025/sod-policies"), icon: "shield" },

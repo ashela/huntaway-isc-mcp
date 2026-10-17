@@ -81,15 +81,16 @@ afterAll(async () => {
 const text = (res: unknown) => JSON.parse(((res as { content: { text: string }[] }).content)[0].text) as Record<string, unknown>;
 
 describe("the built server over stdio", () => {
-  it("lists the eleven tools with the right annotations", async () => {
+  it("lists the tools with the right annotations", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
-      "isc_access_requests", "isc_accounts", "isc_compare_tenants", "isc_form_instances", "isc_identity", "isc_launchers",
-      "isc_request", "isc_search", "isc_tenants", "isc_workflow", "isc_workflow_executions",
+      "isc_access_requests", "isc_accounts", "isc_compare_tenants", "isc_dataflow", "isc_form_instances", "isc_identity",
+      "isc_launchers", "isc_request", "isc_search", "isc_tenants", "isc_workflow", "isc_workflow_executions",
     ]);
     const byName = Object.fromEntries(tools.map((t) => [t.name, t.annotations]));
     expect(byName.isc_search?.readOnlyHint).toBe(true);
+    expect(byName.isc_dataflow?.readOnlyHint).toBe(true);
     expect(byName.isc_compare_tenants?.readOnlyHint).toBe(true);
     expect(byName.isc_request?.readOnlyHint).toBe(false);
     expect(byName.isc_request?.destructiveHint).toBe(true);
