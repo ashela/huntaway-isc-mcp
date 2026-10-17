@@ -1,0 +1,9 @@
+**
+!dist/extension.js
+!dist/server.js
+!resources/icon.png
+!resources/huntaway.svg
+!README.md
+!CHANGELOG.md
+!LICENSE
+!package.json

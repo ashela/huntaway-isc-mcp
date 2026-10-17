@@ -1,0 +1,51 @@
+name: Release
+
+# A tag v<version> builds, gates and publishes to the Marketplace. The tag
+# must equal package.json's version, so the listing and the file never
+# disagree. VSCE_PAT is a Marketplace token with the Manage scope, stored as
+# a repository secret.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: The tag matches package.json
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          echo "tag $TAG, package.json $PKG"
+          test "$TAG" = "$PKG" || { echo "Bump package.json or move the tag."; exit 1; }
+      - run: npm run typecheck
+      - run: npm test
+      - name: Write the leak gate's private terms
+        env:
+          LEAK_GATE_TERMS: ${{ secrets.LEAK_GATE_TERMS }}
+        run: |
+          if [ -z "$LEAK_GATE_TERMS" ]; then echo "LEAK_GATE_TERMS secret is not set"; exit 1; fi
+          printf '%s\n' "$LEAK_GATE_TERMS" > .leak-gate.local
+      - run: npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix-${{ github.ref_name }}
+          path: out/*.vsix
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish to the Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -z "$VSCE_PAT" ]; then echo "VSCE_PAT secret is not set"; exit 1; fi
+          npx vsce publish --packagePath out/*.vsix
