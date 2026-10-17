@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Every tenant and credential input box shows an example of the expected value.
+
 ## 0.1.0
 
 First release.
