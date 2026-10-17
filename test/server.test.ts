@@ -86,9 +86,12 @@ describe("the built server over stdio", () => {
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
       "isc_access_requests", "isc_accounts", "isc_compare_tenants", "isc_dataflow", "isc_form_instances", "isc_identity",
-      "isc_launchers", "isc_nonemployee_load", "isc_request", "isc_search", "isc_tenants", "isc_workflow", "isc_workflow_executions",
+      "isc_launch", "isc_launchers", "isc_nonemployee_load", "isc_request", "isc_search", "isc_sit_cases", "isc_tenants",
+      "isc_workflow", "isc_workflow_evidence", "isc_workflow_executions",
     ]);
     const byName = Object.fromEntries(tools.map((t) => [t.name, t.annotations]));
+    expect(byName.isc_launch?.readOnlyHint).toBe(false);
+    expect(byName.isc_workflow_evidence?.readOnlyHint).toBe(true);
     expect(byName.isc_nonemployee_load?.readOnlyHint).toBe(false);
     expect(byName.isc_nonemployee_load?.destructiveHint).toBe(true);
     expect(byName.isc_search?.readOnlyHint).toBe(true);

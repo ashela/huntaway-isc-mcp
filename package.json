@@ -2,7 +2,7 @@
   "name": "sailpoint-isc-mcp",
   "displayName": "Huntaway: SailPoint ISC MCP",
   "description": "An MCP server for SailPoint Identity Security Cloud inside VS Code: search, identities, workflows and their executions, launchers and who can see them, form instances, accounts, hosted access requests, and drift between two tenants. Credentials stay in VS Code secret storage.",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "publisher": "huntaway",
   "license": "MIT",
   "icon": "resources/icon.png",

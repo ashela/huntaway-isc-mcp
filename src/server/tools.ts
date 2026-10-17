@@ -13,6 +13,7 @@ import {
 import { analyseWorkflow, formSteps, stepsOf, httpSteps } from "./diagnostics.js";
 import { buildDataFlow, dataFlowBlock, gather, summarise as summariseDataFlow } from "./dataflow.js";
 import { registerNonEmployeeTool } from "./nonemployee/tool.js";
+import { registerSitTools } from "./sit-tools.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve as resolvePath } from "node:path";
 import { MAX_CHARS_DEFAULT, asList, asRecord, clip, isOk, leakedAttributes, lower, matchByName, q, rows, type Json } from "./util.js";
@@ -802,6 +803,7 @@ export function registerTools(server: McpServer, isc: IscClient, options: ToolOp
   );
 
   registerNonEmployeeTool(server, isc, { todayOffsetHours: options.todayOffsetHours ?? 0 });
+  registerSitTools(server, isc);
 
   void nameOf;
 }

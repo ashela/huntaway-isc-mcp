@@ -35,6 +35,9 @@ Each tenant in the Huntaway view opens into its object types: sources, identity 
 | `isc_access_requests` | SailPoint's hosted access-request tools, through the tenant's own endpoint. | create and cancel |
 | `isc_dataflow` | The tenant's data-flow diagram and attribute-level source-to-target map, in Huntaway's DFD model: sources, identity profiles with transforms dereferenced, CREATE policies, attribute sync, correlation, and the issues found on the way. | No |
 | `isc_nonemployee_load` | Bulk-create non-employee records from a tab-separated export with the notice workflows held off until every identity has settled. `plan` is a dry run; `apply`, `restore` and `rollback` need confirmation. | apply, restore, rollback |
+| `isc_sit_cases` | A SIT case register (JSON) with its verdict log (JSONL): list what is open, read a case, record a verdict with redacted evidence. | the results log only |
+| `isc_workflow_evidence` | What a workflow actually did since a time, optionally for one identity: steps run, every send with recipients tagged (never a raw address), subject and body redacted, a leak check, cards, the failing step. | No |
+| `isc_launch` | Run a launcher as a person would: launch, follow its own execution, submit each form in turn, optionally cancel, return the evidence. Guarded by the SIT profile. | Yes |
 | `isc_request` | Any method, any path. The escape hatch. | Any method but GET |
 
 Read tools are marked read-only. The two that can write require `confirm: true`, which the assistant may set only after you have agreed to that specific change, and the editor asks before running them.
@@ -54,6 +57,10 @@ Read tools are marked read-only. The two that can write require `confirm: true`,
 The sequence is `plan` (a dry run: every line comes back LOAD or SKIP with the reason, plus a PLAN DIGEST), then `apply` with `confirm: true` and that digest. The apply runs as a job inside the server: it snapshots the identities it watches, disables the notice workflows (the STATE file on disk names them before the first write), creates one record at a time with a write-ahead entry in the RESULTS file, waits for every created identity to settle, and only then re-enables the workflows. If anything is not right they stay off and the reply names the `restore` to run. `rollback` deletes what a results file created, the same way. Work files live under `~/.huntaway-isc/<tenant>` (override with `HUNTAWAY_ISC_WORK_DIR`).
 
 A POST whose answer was lost is never re-sent: the record is found by login. A record counts as gone only on two 404 reads. A workflow whose definition changed while it was off is never re-enabled by the tool.
+
+### System integration testing
+
+Three tools carry a SIT: `isc_sit_cases` keeps the register and the verdicts (PASS, FAIL, NOTE, KNOWN, NA, ERROR, BLOCKED; latest wins, evidence redacted on write), `isc_launch` runs a case's launcher through its forms, and `isc_workflow_evidence` reads what the workflows then did. A **SIT profile** JSON (optional) names the role mailboxes so recipients come back as tags such as `IS` or `CAM` rather than addresses, the suffix of generated mailboxes, the launchers and form keys the harness must refuse, and a fixture token every onboarding name must carry. `resources/examples/sit-profile.example.json` is a starting point. The case handlers themselves, what to launch with which data and what to assert, are yours; these tools are the primitives every one of them needs.
 
 ### Comparing tenants
 

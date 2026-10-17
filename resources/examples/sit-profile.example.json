@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "roleMailboxes": {
+    "IS": "^identityspecialist@",
+    "CAM": "^camadmin@",
+    "HR": "^hrdirect@",
+    "SD": "^servicedesk@"
+  },
+  "generatedSuffixes": ["@tmp.example.com"],
+  "forbiddenLaunchers": ["Urgent Disable", "Link to Employee"],
+  "forbiddenFormKeys": ["target", "employeeIdentity", "candidate"],
+  "fixtureToken": "sitfx",
+  "leakPatterns": []
+}
