@@ -1,0 +1,136 @@
+{
+  "name": "sailpoint-isc-mcp",
+  "displayName": "Huntaway: SailPoint ISC MCP",
+  "description": "An MCP server for SailPoint Identity Security Cloud inside VS Code: search, identities, workflows and their executions, launchers and who can see them, form instances, accounts, hosted access requests, and drift between two tenants. Credentials stay in VS Code secret storage.",
+  "version": "0.2.0",
+  "publisher": "huntaway",
+  "license": "MIT",
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ashela/huntaway-isc-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ashela/huntaway-isc-mcp/issues"
+  },
+  "homepage": "https://github.com/ashela/huntaway-isc-mcp#readme",
+  "engines": {
+    "vscode": "^1.101.0",
+    "node": ">=20"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Other"
+  ],
+  "keywords": [
+    "sailpoint",
+    "identity security cloud",
+    "identitynow",
+    "mcp",
+    "model context protocol",
+    "copilot",
+    "huntaway"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "huntaway-isc.servers",
+        "label": "Huntaway SailPoint ISC"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "huntaway",
+          "title": "Huntaway",
+          "icon": "resources/huntaway.svg"
+        }
+      ]
+    },
+    "views": {
+      "huntaway": [
+        {
+          "id": "huntawayIsc.tenants",
+          "name": "SailPoint ISC Tenants",
+          "icon": "resources/huntaway.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "huntawayIsc.tenants",
+        "contents": "No tenants yet. Add one to make the Huntaway ISC MCP server available in chat.\n[Add Tenant](command:huntaway-isc.addTenant)\nCredentials are kept in VS Code secret storage, never in settings."
+      }
+    ],
+    "commands": [
+      { "command": "huntaway-isc.addTenant", "title": "Add Tenant", "category": "Huntaway ISC", "icon": "$(add)" },
+      { "command": "huntaway-isc.editTenant", "title": "Edit Tenant", "category": "Huntaway ISC", "icon": "$(edit)" },
+      { "command": "huntaway-isc.setCredentials", "title": "Set Credentials", "category": "Huntaway ISC", "icon": "$(key)" },
+      { "command": "huntaway-isc.setDefault", "title": "Set as Default Tenant", "category": "Huntaway ISC", "icon": "$(star)" },
+      { "command": "huntaway-isc.testTenant", "title": "Test Connection", "category": "Huntaway ISC", "icon": "$(plug)" },
+      { "command": "huntaway-isc.removeTenant", "title": "Remove Tenant", "category": "Huntaway ISC", "icon": "$(trash)" },
+      { "command": "huntaway-isc.refresh", "title": "Refresh", "category": "Huntaway ISC", "icon": "$(refresh)" },
+      { "command": "huntaway-isc.openObject", "title": "Open JSON", "category": "Huntaway ISC" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "huntaway-isc.addTenant", "when": "view == huntawayIsc.tenants", "group": "navigation@1" },
+        { "command": "huntaway-isc.refresh", "when": "view == huntawayIsc.tenants", "group": "navigation@2" }
+      ],
+      "view/item/context": [
+        { "command": "huntaway-isc.testTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "inline@1" },
+        { "command": "huntaway-isc.setCredentials", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "inline@2" },
+        { "command": "huntaway-isc.editTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "1_edit@1" },
+        { "command": "huntaway-isc.setDefault", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "1_edit@2" },
+        { "command": "huntaway-isc.removeTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "9_danger@1" },
+        { "command": "huntaway-isc.refresh", "when": "view == huntawayIsc.tenants && viewItem == category", "group": "inline" }
+      ],
+      "commandPalette": [
+        { "command": "huntaway-isc.openObject", "when": "false" }
+      ]
+    },
+    "configuration": {
+      "title": "Huntaway ISC",
+      "properties": {
+        "huntaway-isc.workflowStepCap": {
+          "type": "integer",
+          "default": 50,
+          "minimum": 1,
+          "description": "The workflow step cap your ISC licence enforces on enable (20, 50 or 100). Used by the workflow diagnostics."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run build && vitest run",
+    "gate": "node scripts/leak-gate.mjs",
+    "package": "node scripts/package.mjs",
+    "vscode:prepublish": "npm run build && node scripts/leak-gate.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "1.101.0",
+    "@vscode/vsce": "^4.0.0",
+    "adm-zip": "^0.6.1",
+    "@types/adm-zip": "^0.5.7",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.5"
+  }
+}

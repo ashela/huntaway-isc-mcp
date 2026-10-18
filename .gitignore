@@ -1,0 +1,10 @@
+node_modules/
+dist/
+out/
+*.vsix
+.vscode-test/
+# The leak gate's private term list: client names, tenant hosts, ids. Never committed.
+.leak-gate.local
+# Local credentials of any kind.
+.env
+.env.*

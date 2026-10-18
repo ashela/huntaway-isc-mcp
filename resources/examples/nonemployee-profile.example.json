@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "source": "Vendor Staff",
+  "writerWorkflow": "Vendor Staff Onboarding Writer",
+  "login": { "lead": "preferred", "suffixes": 5 },
+  "uidPrefix": "",
+  "email": { "prefix": "", "domain": "vendors.example.com" },
+  "phone": "+10000000000",
+  "columns": {
+    "firstName": "firstName",
+    "lastName": "lastName",
+    "preferredName": "PreferredName",
+    "startDate": "employeeStartDate",
+    "endDate": "employeeEndDate",
+    "managerKey": "ManagerEmployeeID",
+    "managerName": "ManagerName",
+    "adActive": "AD Account Active"
+  },
+  "data": {
+    "divisionCode": { "column": "DivisionCode", "ref": "REF-Division" },
+    "businessUnitCode": { "column": "BusinessUnitCode", "ref": "REF-BusinessUnit" },
+    "siteCode": { "column": "SiteCode", "ref": "REF-Site" },
+    "locationCode": { "column": "LocationCode", "ref": "REF-Location", "blank": "NONE" },
+    "vendor": { "column": "Vendor", "formOption": "vendor", "needsAllow": "Other" },
+    "jobTitle": { "column": "JobTitle", "formOption": "jobTitle", "needsAllow": "Other" },
+    "hoursOnSitePerWeek": { "column": "HoursPerWeek", "formOption": "hoursOnSitePerWeek", "blank": "0", "numeric": true },
+    "systemAccessRequired": { "column": "systemAccessRequired", "values": ["AD", "AD-LM", "AD-M", "NONE"], "upper": true }
+  },
+  "constants": { "approvalStatus": "approved" },
+  "manager": {
+    "keyAttribute": "identificationNumber",
+    "okStates": ["active", "preLeaver"],
+    "goneStates": ["terminated", "terminatedFinal", "archived"],
+    "fallbackUid": "svc_identity_specialist"
+  },
+  "lifecycle": {
+    "preLeaverDays": 13,
+    "terminatedFinalAfterDays": 30,
+    "identityType": "CONTRACTOR",
+    "transformDayOffsetHours": 12,
+    "earliestStart": "2000-01-01",
+    "maxYearsAhead": 5
+  },
+  "suppress": [
+    "New Vendor Staff Notice",
+    "Vendor Staff Pre-Hire Notification",
+    "Vendor Staff Activation Notification",
+    "Vendor Staff Leaver Notice",
+    "Vendor Staff Termination Notification",
+    "Vendor Staff Mover Notification",
+    "New Starter Account Details"
+  ],
+  "watch": ["cloudLifecycleState", "businessUnitCode", "lastname", "identityType", "managerId"],
+  "settle": { "stableSeconds": 120, "settleSeconds": 180, "capMinutes": 15, "secondsPerRow": 8, "requireAttributes": ["lastname", "businessUnitCode"] },
+  "quietWindows": [
+    { "label": "morning scheduled runs", "tz": "Pacific/Auckland", "from": "07:50", "to": "08:15" },
+    { "label": "identity processing", "tz": "America/Chicago", "from": "19:45", "to": "02:00", "skippable": true }
+  ]
+}

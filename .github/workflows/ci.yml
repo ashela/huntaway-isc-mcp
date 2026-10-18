@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # The private term list never enters the repository: it is written from
+      # a secret for the duration of the job and the gate refuses to run
+      # without it.
+      - name: Write the leak gate's private terms
+        env:
+          LEAK_GATE_TERMS: ${{ secrets.LEAK_GATE_TERMS }}
+        run: |
+          if [ -z "$LEAK_GATE_TERMS" ]; then echo "LEAK_GATE_TERMS secret is not set"; exit 1; fi
+          printf '%s\n' "$LEAK_GATE_TERMS" > .leak-gate.local
+      - run: npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: out/*.vsix
+          retention-days: 7
+          if-no-files-found: error
