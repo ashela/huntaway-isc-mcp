@@ -79,12 +79,15 @@
       { "command": "huntaway-isc.testTenant", "title": "Test Connection", "category": "Huntaway ISC", "icon": "$(plug)" },
       { "command": "huntaway-isc.removeTenant", "title": "Remove Tenant", "category": "Huntaway ISC", "icon": "$(trash)" },
       { "command": "huntaway-isc.refresh", "title": "Refresh", "category": "Huntaway ISC", "icon": "$(refresh)" },
-      { "command": "huntaway-isc.openObject", "title": "Open JSON", "category": "Huntaway ISC" }
+      { "command": "huntaway-isc.openObject", "title": "Open JSON", "category": "Huntaway ISC" },
+      { "command": "huntaway-isc.connectHuntaway", "title": "Connect Huntaway", "category": "Huntaway ISC", "icon": "$(link)" },
+      { "command": "huntaway-isc.disconnectHuntaway", "title": "Disconnect Huntaway", "category": "Huntaway ISC" }
     ],
     "menus": {
       "view/title": [
         { "command": "huntaway-isc.addTenant", "when": "view == huntawayIsc.tenants", "group": "navigation@1" },
-        { "command": "huntaway-isc.refresh", "when": "view == huntawayIsc.tenants", "group": "navigation@2" }
+        { "command": "huntaway-isc.refresh", "when": "view == huntawayIsc.tenants", "group": "navigation@2" },
+        { "command": "huntaway-isc.connectHuntaway", "when": "view == huntawayIsc.tenants", "group": "navigation@3" }
       ],
       "view/item/context": [
         { "command": "huntaway-isc.testTenant", "when": "view == huntawayIsc.tenants && viewItem =~ /^tenant/", "group": "inline@1" },
@@ -106,6 +109,18 @@
           "default": 50,
           "minimum": 1,
           "description": "The workflow step cap your ISC licence enforces on enable (20, 50 or 100). Used by the workflow diagnostics."
+        },
+        "huntaway-isc.httpEndpoint.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Serve the same tools on `http://127.0.0.1` for the Huntaway desktop app, behind a token made by **Huntaway ISC: Connect Huntaway**. Nothing listens until a token exists."
+        },
+        "huntaway-isc.httpEndpoint.port": {
+          "type": "integer",
+          "default": 37615,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "The port the localhost endpoint listens on. Huntaway saves this address, so keep it stable."
         }
       }
     }

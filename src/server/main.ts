@@ -5,7 +5,8 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { STEP_CAP_ENV, TENANTS_ENV, parseStepCap, parseTenantsEnv } from "../shared/config.js";
+import { HTTP_PORT_ENV, HTTP_TOKEN_SHA256_ENV, STEP_CAP_ENV, TENANTS_ENV, parseHttpPort, parseStepCap, parseTenantsEnv } from "../shared/config.js";
+import { serveHttp } from "./http.js";
 import { IscClient } from "./isc.js";
 import { registerTools } from "./tools.js";
 
@@ -32,17 +33,36 @@ export function instructions(tenantKeys: string[], defaultKey: string | null): s
 export async function main(): Promise<void> {
   const tenants = parseTenantsEnv(process.env[TENANTS_ENV]);
   const stepCap = parseStepCap(process.env[STEP_CAP_ENV]);
+  const httpPort = parseHttpPort(process.env[HTTP_PORT_ENV]);
+  const tokenSha256 = (process.env[HTTP_TOKEN_SHA256_ENV] ?? "").trim().toLowerCase();
   delete process.env[TENANTS_ENV];
+  delete process.env[HTTP_TOKEN_SHA256_ENV];
 
+  // One API client for the process, so a tenant's token is fetched once
+  // whichever session asks first.
   const isc = new IscClient(tenants, `huntaway-isc-mcp/${VERSION}`);
   const def = tenants.find((t) => t.isDefault)?.key ?? (tenants.length === 1 ? tenants[0].key : null);
-  const server = new McpServer(
-    { name: "huntaway-isc", version: VERSION },
-    { instructions: instructions(tenants.map((t) => t.key), def) },
-  );
-  // The operator's calendar day is this machine's: the server runs where the person sits.
-  registerTools(server, isc, { stepCap, todayOffsetHours: -new Date().getTimezoneOffset() / 60 });
-  await server.connect(new StdioServerTransport());
+  const makeServer = () => {
+    const server = new McpServer(
+      { name: "huntaway-isc", version: VERSION },
+      { instructions: instructions(tenants.map((t) => t.key), def) },
+    );
+    // The operator's calendar day is this machine's: the server runs where the person sits.
+    registerTools(server, isc, { stepCap, todayOffsetHours: -new Date().getTimezoneOffset() / 60 });
+    return server;
+  };
+
+  if (httpPort !== null) {
+    // The localhost endpoint (src/server/http.ts). Without a token hash it
+    // does not start: an endpoint nobody can authenticate to is a mistake.
+    if (!/^[0-9a-f]{64}$/.test(tokenSha256)) throw new Error(`${HTTP_PORT_ENV} is set but ${HTTP_TOKEN_SHA256_ENV} is not a SHA-256`);
+    const http = await serveHttp({ port: httpPort, tokenSha256, makeServer });
+    const address = http.address();
+    // The one line the extension waits for. stdout is free in this mode.
+    process.stdout.write(JSON.stringify({ listening: typeof address === "object" && address ? address.port : httpPort }) + "\n");
+    return;
+  }
+  await makeServer().connect(new StdioServerTransport());
 }
 
 main().catch((error) => {

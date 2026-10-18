@@ -6,6 +6,7 @@ import { TenantStore } from "./tenants.js";
 import { CategoryItem, ObjectItem, TenantItem, TenantTree, type Node } from "./tree.js";
 import { IscClient } from "./server/isc.js";
 import { readObject } from "./browser.js";
+import { HttpEndpoint, endpointUrl, huntawayInstructions } from "./endpoint.js";
 
 const JSON_SCHEME = "huntaway-isc";
 
@@ -20,6 +21,18 @@ export function activate(context: vscode.ExtensionContext): void {
   } else {
     void vscode.window.showWarningMessage("Huntaway ISC: this VS Code version has no MCP server API. Update to 1.101 or later.");
   }
+
+  // The optional localhost endpoint for Huntaway (src/endpoint.ts). Off
+  // until the person mints a token; follows every tenant and setting change.
+  const output = vscode.window.createOutputChannel("Huntaway ISC");
+  const endpoint = new HttpEndpoint(store, context.secrets, serverScript, output);
+  context.subscriptions.push(output, endpoint);
+  const restartEndpoint = () => void endpoint.restart().catch((error: unknown) => output.appendLine(String(error)));
+  store.onDidChange(restartEndpoint);
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("huntaway-isc")) restartEndpoint();
+  }));
+  restartEndpoint();
 
   // One API client per configuration version, shared by the browser and
   // the JSON editor, so a token is fetched once per tenant per session.
@@ -208,6 +221,39 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!key) return;
     const answer = await vscode.window.showWarningMessage(`Remove tenant ${key} and its stored credentials?`, { modal: true }, "Remove");
     if (answer === "Remove") await store.remove(key);
+  });
+
+  register("huntaway-isc.connectHuntaway", async () => {
+    if (!store.list().length) {
+      void vscode.window.showInformationMessage("Add a tenant first: Huntaway ISC: Add Tenant.");
+      return;
+    }
+    const config = vscode.workspace.getConfiguration("huntaway-isc");
+    if (!config.get<boolean>("httpEndpoint.enabled", false)) {
+      const answer = await vscode.window.showWarningMessage(
+        "Let the Huntaway desktop app use your tenants? This starts a server on this computer only (127.0.0.1) that answers to one token. " +
+          "Huntaway holds that token, never a tenant's credentials. Anything holding the token can do what Copilot Chat can do here.",
+        { modal: true },
+        "Start and make a token",
+      );
+      if (answer !== "Start and make a token") return;
+      await config.update("httpEndpoint.enabled", true, vscode.ConfigurationTarget.Global);
+    }
+    const { token, port } = await endpoint.mint();
+    await vscode.env.clipboard.writeText(huntawayInstructions(port, token));
+    void vscode.window.showInformationMessage(
+      `The endpoint is listening on ${endpointUrl(port)}. Its address and a new token are on the clipboard: paste them into Huntaway, Settings, then Tools. ` +
+        "The token is shown only this once; running this again replaces it.",
+      { modal: true },
+    );
+  });
+
+  register("huntaway-isc.disconnectHuntaway", async () => {
+    const answer = await vscode.window.showWarningMessage("Stop the localhost endpoint and forget its token? Huntaway will no longer reach your tenants.", { modal: true }, "Disconnect");
+    if (answer !== "Disconnect") return;
+    await endpoint.forget();
+    await vscode.workspace.getConfiguration("huntaway-isc").update("httpEndpoint.enabled", false, vscode.ConfigurationTarget.Global);
+    void vscode.window.showInformationMessage("Huntaway is disconnected. Remove the server in Huntaway's Settings, then Tools.");
   });
 
   register("huntaway-isc.testTenant", async (item) => {
