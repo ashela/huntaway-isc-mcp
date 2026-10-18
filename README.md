@@ -66,6 +66,18 @@ Three tools carry a SIT: `isc_sit_cases` keeps the register and the verdicts (PA
 
 Objects pair by name. Each tenant can carry **environment tokens** (set on the tenant, for example `DEV, dev-tenant` on one side and `UAT, uat-tenant` on the other). They are masked to `<ENV>` before the diff, as are ids, timestamps, owners, health, run counters and email addresses. `enabled` is deliberately not masked. Recipient fields are counted separately, because a build tenant routes mail to a test address on purpose.
 
+## Using the tenants from the Huntaway desktop app
+
+Huntaway can run these tools from its own chat. It does not need the tenants' credentials to do so: the extension can serve the same tools on this computer only, behind one token, and Huntaway holds that token.
+
+1. Run **Huntaway ISC: Connect Huntaway** (the link icon on the Huntaway view). The first time, it asks before starting anything.
+2. The extension starts a second copy of the server listening on `http://127.0.0.1:37615/mcp` (**Settings: Huntaway ISC: Http Endpoint: Port** to change it) and puts the address and a new token on the clipboard.
+3. In Huntaway, open Settings, then Tools, then Add a tool server: kind **Web address**, the address, header `Authorization` with the value `Bearer <token>`. Huntaway keeps the header value in its own secret store.
+
+The token is shown once. Only its SHA-256 is kept, in VS Code's secret storage, and only the hash reaches the server. Running Connect Huntaway again makes a new token and the old one stops working; **Huntaway ISC: Disconnect Huntaway** forgets it and stops the endpoint.
+
+The endpoint listens on 127.0.0.1 only, answers only on `/mcp`, refuses a request whose Host is not this port on `127.0.0.1` or `localhost` (DNS rebinding), refuses any request carrying an Origin header (a browser page), and refuses anything without the token. It is a sibling of the copy Copilot Chat uses, started from the same tenants and credentials, and it follows every change to them. Whatever holds the token can do what Copilot Chat can do here, including the writes that need `confirm: true`, so treat it like a credential.
+
 ## Requirements
 
 VS Code 1.101 or later. Nothing else.

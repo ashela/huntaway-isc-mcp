@@ -9,6 +9,14 @@ export const TENANTS_ENV = "HUNTAWAY_ISC_TENANTS";
 /** Workflow step cap the licence enforces on enable (20, 50 or 100). */
 export const STEP_CAP_ENV = "HUNTAWAY_ISC_STEP_CAP";
 export const DEFAULT_STEP_CAP = 50;
+/** Set only when the extension starts the optional localhost endpoint: the
+ *  port to listen on (0 picks one). Unset means stdio, as the editor runs it. */
+export const HTTP_PORT_ENV = "HUNTAWAY_ISC_HTTP_PORT";
+/** The hex SHA-256 of the endpoint's bearer token. The token itself never
+ *  reaches the server process. */
+export const HTTP_TOKEN_SHA256_ENV = "HUNTAWAY_ISC_HTTP_TOKEN_SHA256";
+/** The endpoint's port when the person has not chosen one. */
+export const DEFAULT_HTTP_PORT = 37615;
 
 /** Tenant keys are what the model types: short, lower-case, stable. */
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9-]{0,31}$/;
@@ -89,4 +97,12 @@ export function parseTenantsEnv(raw: string | undefined): TenantRuntime[] {
 export function parseStepCap(raw: string | undefined): number {
   const n = Number(raw);
   return Number.isInteger(n) && n > 0 ? n : DEFAULT_STEP_CAP;
+}
+
+/** The endpoint's port from the environment, or null for stdio mode. */
+export function parseHttpPort(raw: string | undefined): number | null {
+  if (raw === undefined || raw.trim() === "") return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 0 || n > 65535) throw new Error(`${HTTP_PORT_ENV} must be a port number, not ${JSON.stringify(raw)}`);
+  return n;
 }

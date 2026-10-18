@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- An optional localhost endpoint for the Huntaway desktop app: **Huntaway ISC: Connect Huntaway** serves the same tools over Streamable HTTP on `127.0.0.1`, behind a token shown once and kept only as a hash, so Huntaway never holds a tenant's credentials. Off until a token exists; **Disconnect Huntaway** stops it.
+
 ## 0.2.0
 
 - `isc_dataflow`: the tenant's data-flow diagram and attribute-level source-to-target map in Huntaway's DFD model, with transforms dereferenced and issues listed.
