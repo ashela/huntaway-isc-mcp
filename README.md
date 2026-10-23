@@ -1,6 +1,6 @@
 # Huntaway: SailPoint ISC MCP
 
-An MCP server for SailPoint Identity Security Cloud that lives inside VS Code. Once a tenant is added, Copilot Chat (and any other MCP client the editor hosts) can search identities, read workflows with their diagnostics, replay what a workflow actually did, trace a launcher to the people who can see it, inspect form instances, list accounts on a source, use SailPoint's hosted access-request tools, and compare two tenants for drift.
+An MCP server for SailPoint Identity Security Cloud that lives inside VS Code. Once a tenant is added, any  MCP client can search identities, read workflows with their diagnostics, replay what a workflow actually did, trace a launcher to the people who can see it, inspect form instances, list accounts on a source, use SailPoint's hosted access-request tools, and compare two tenants for drift.
 
 Nothing to install beside the extension. The server runs on the editor's own Node.js.
 
